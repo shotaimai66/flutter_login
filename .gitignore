@@ -8,6 +8,7 @@
 .buildlog/
 .history
 .svn/
+.env
 
 # IntelliJ related
 *.iml
@@ -66,3 +67,18 @@
 **/macos/Flutter/ephemeral
 **/macos/Runner/GeneratedPluginRegistrant.*
 **/macos/Flutter/Flutter-Generated.xcconfig
+
+
+## ./serverlss
+**/docker.env
+
+### Serverless ###
+# Ignore build directory
+**/.serverless
+**/.bundle/
+**/vendor/bundle
+**/node_modules
+**/.env
+
+# terraform
+**/.terraform

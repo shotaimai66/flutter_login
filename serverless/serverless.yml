@@ -1,0 +1,103 @@
+service: flutter-backend
+frameworkVersion: '3'
+
+package:
+  exclude:
+    - node_modules/**
+    - .dynamodb/**
+    - .serverless/**
+    - tests/**
+    - .coverage
+    - test/**
+    - spec/**
+    - docker-compose.yml
+    - Dockerfile
+    - package.json
+  include:
+    - api/**
+
+provider:
+  name: aws
+  region: ap-northeast-1
+  runtime: ruby3.2
+  timeout: 60 # in seconds
+  stage: ${opt:stage, self:custom.defaultStage}
+  environment: ${file(./conf/env/${self:provider.stage}.yml)}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: 'dynamodb:*'
+          Resource: '*'
+  logs:
+    restApi: true
+
+plugins:
+  - serverless-ruby-layer
+  - serverless-offline
+  - serverless-prune-plugin
+  - serverless-localstack
+
+custom:
+  defaultStage: local
+  serverless-offline:
+    port: 3000
+    host: 0.0.0.0
+  localstack:
+    host: http://localstack
+    edgePort: 4566
+    region: ap-northeast-1
+    stages:
+      - local
+
+functions:
+  videos:
+    handler: api/handler.youtube_videos
+    events:
+      - http:
+          path: /videos
+          method: get
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            authorizerId: !Ref CognitoAuthorizer
+          request:
+            parameters:
+              querystrings:
+                limit: false
+                page_token: false
+
+resources:
+  Resources:
+    GatewayResponse401:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: UNAUTHORIZED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'
+    GatewayResponse500:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: AUTHORIZER_FAILURE
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '500'
+    CognitoAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        AuthorizerResultTtlInSeconds: 300
+        AuthType: String
+        Name: CognitoAuthorizer
+        RestApiId: !Ref ApiGatewayRestApi # Serverless Framework 側でよしなに生成される API Gateway の論理 ID がコレ
+        IdentitySource: method.request.header.Authorization
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - arn:aws:cognito-idp:${self:provider.region}:${aws:accountId}:userpool/ap-northeast-1_1kpb1Afxa
+

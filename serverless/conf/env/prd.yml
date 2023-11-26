@@ -1,0 +1,5 @@
+STAGE: prd
+DYNAMO_DB_TABLE_NAME: prd_user
+DYNAMO_DB_TABLE_RCU: 1
+DYNAMO_DB_TABLE_WCU: 1
+YOUTUBE_KEY: ${ssm:/flutter_dev/production/youtube_key}
