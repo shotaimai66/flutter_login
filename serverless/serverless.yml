@@ -66,6 +66,7 @@ functions:
               querystrings:
                 limit: false
                 page_token: false
+                search_word: false
 
 resources:
   Resources:

@@ -8,11 +8,12 @@ def youtube_videos(event:, context:)
   youtube.key = ENV['YOUTUBE_KEY']
   pp event
   query_params = event['queryStringParameters'] || {}
+  search_word = query_params['search_word'] || ''
   max_results = query_params['limit'] || '25' # デフォルト値は25
   page_token = query_params['page_token'] # 次のページまたは前のページへのアクセスに使用
 
   begin
-    response = youtube.list_searches('snippet', type: 'video', q: 'ちいかわ', channel_id: 'UCrrsHarrLoiLTqu1LHxDJpw', max_results: max_results.to_i, page_token: page_token)
+    response = youtube.list_searches('snippet', type: 'video', q: search_word, max_results: max_results.to_i, page_token: page_token)
 
     pp response
     # レスポンスを返す
